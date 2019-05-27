@@ -156,12 +156,73 @@ export class AppHome {
     j2y = (1 / 2) * this.canvasSize - j2y;
 
     const ctx = this.canvas.getContext("2d");
+    ctx.setLineDash([]);
+    //draw graph
     ctx.beginPath();
+    ctx.moveTo(0, this.canvasSize / 2);
+    ctx.lineTo(this.canvasSize, this.canvasSize / 2);
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(this.canvasSize / 2, 0);
+    ctx.lineTo(this.canvasSize / 2, this.canvasSize);
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+
+    for (let i = 0; i < this.canvasSize / 2; i += 10) {
+      ctx.beginPath();
+      ctx.moveTo(this.canvasSize / 2 + i, this.canvasSize / 2 + 5);
+      ctx.lineTo(this.canvasSize / 2 + i, this.canvasSize / 2 + -5);
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(this.canvasSize / 2 - i, this.canvasSize / 2 + 5);
+      ctx.lineTo(this.canvasSize / 2 - i, this.canvasSize / 2 + -5);
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(this.canvasSize / 2 + 5, this.canvasSize / 2 + i);
+      ctx.lineTo(this.canvasSize / 2 + -5, this.canvasSize / 2 + i);
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(this.canvasSize / 2 + 5, this.canvasSize / 2 - i);
+      ctx.lineTo(this.canvasSize / 2 + -5, this.canvasSize / 2 - i);
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+    }
+
+    //draw robot
+    ctx.beginPath();
+    // draw lines connecting joints
     ctx.moveTo(this.canvasSize / 2, this.canvasSize / 2);
     ctx.lineTo(j1x, j1y);
     ctx.lineTo(j2x, j2y);
+    ctx.strokeStyle = "black";
     ctx.stroke();
 
+    // draw dotted
+    ctx.setLineDash([5, 5]);
+
+    ctx.beginPath();
+    ctx.moveTo(this.canvasSize / 2, this.canvasSize / 2);
+    ctx.lineTo(this.canvasSize / 2 + this.a1, this.canvasSize / 2);
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(j1x, j1y);
+    ctx.lineTo(j1x + this.x1, j1y - this.y1);
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // draw circles
     ctx.beginPath();
     ctx.arc(j1x, j1y, 10, 0, 2 * Math.PI);
     ctx.fillStyle = "red";
@@ -184,13 +245,36 @@ export class AppHome {
     ctx.fillStyle = "red";
     ctx.fill();
     ctx.stroke();
+
+    // draw angles
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(
+      this.canvasSize / 2,
+      this.canvasSize / 2,
+      20,
+      2 * Math.PI - this.t1,
+      0
+    );
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(
+      j1x,
+      j1y,
+      20,
+      2 * Math.PI - this.t2 - this.t1,
+      2 * Math.PI - this.t1
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   componentDidLoad() {
     this.a1 = 100;
     this.a2 = 100;
-    this.t1 = toRad(50);
-    this.t2 = toRad(0);
+    this.t1 = toRad(20);
+    this.t2 = toRad(20);
 
     this.drawRobot();
   }
