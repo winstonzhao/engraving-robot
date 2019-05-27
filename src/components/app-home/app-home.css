@@ -6,6 +6,10 @@
   flex-direction: column;
 }
 
+h1 {
+  color: #001f7c;
+}
+
 button {
   background: #5851ff;
   color: white;
@@ -38,3 +42,23 @@ input {
   margin: 0 10px;
 }
 
+.canvas {
+  border: 3px solid #5851ff;
+  border-radius: 10px;
+  margin: 10px;
+}
+
+.button-box {
+  display: flex;
+  flex-direction: row;
+}
+
+.labels {
+  border: 3px solid #5851ff;
+  border-radius: 1000px;
+  padding: 0 20px;
+  height: 30px;
+  line-height:  0px;
+  margin: 10px;
+  background: white;
+}

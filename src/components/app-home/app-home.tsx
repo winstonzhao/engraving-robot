@@ -1,8 +1,8 @@
 import { Component, State } from "@stencil/core";
 
-const toRad = (deg: number) => (deg * Math.PI) / 180;
+// const toDeg = (rad: number) => (rad * 180) / Math.PI;
 
-const toDeg = (rad: number) => (180 * rad) / Math.PI;
+const toRad = (deg: number) => (deg * Math.PI) / 180;
 
 @Component({
   tag: "app-home",
@@ -10,7 +10,7 @@ const toDeg = (rad: number) => (180 * rad) / Math.PI;
   shadow: true
 })
 export class AppHome {
-  canvasSize = 750;
+  canvasSize = 550;
 
   canvas: HTMLCanvasElement;
 
@@ -21,8 +21,10 @@ export class AppHome {
 
   a2: number;
 
+  @State()
   t1: number;
 
+  @State()
   t2: number;
 
   xInput: HTMLInputElement;
@@ -33,6 +35,14 @@ export class AppHome {
 
   vxInput: HTMLInputElement;
   vyInput: HTMLInputElement;
+
+  x1: number;
+  y1: number;
+
+  @State()
+  x2: number;
+  @State()
+  y2: number;
 
   onToggleStart() {
     if (this.interval) {
@@ -69,14 +79,17 @@ export class AppHome {
   }
 
   setAnglesFor(x: number, y: number) {
-    const b = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-    const t1 = Math.acos(b / (2 * this.a1)) + Math.atan(x / y);
-    const t2 = toRad(180) + 2 * Math.asin(b / (2 * this.a1));
-    this.t1 = toDeg(t1);
-    this.t2 = toDeg(t2);
+    let t2 =
+      2 *
+      Math.acos(
+        (x < 0 ? -1 : 1) *
+          Math.sqrt((Math.pow(x, 2), Math.pow(y, 2)) / Math.pow(this.a1, 2))
+      );
 
-    console.log(this.t1);
-    console.log(this.t2);
+    let t1 = (Math.atan((2 * y) / x) - t2) / 2;
+
+    this.t1 = t1;
+    this.t2 = t2;
 
     this.drawRobot();
   }
@@ -89,13 +102,17 @@ export class AppHome {
   }
 
   updateAngles() {
-    const t1 = toRad(this.t1);
-    const t2 = toRad(this.t2);
-    const denom =
+    const t1 = this.t1;
+    const t2 = this.t2;
+    let denom =
       -this.a1 *
         this.a2 *
         (Math.sin(t1) * Math.cos(t1 + t2) + Math.cos(t1) * Math.sin(t1 + t2)) -
       2 * Math.pow(this.a2, 2) * Math.sin(t1 + t2) * Math.cos(t1 + t2);
+
+    if (denom < 0) {
+      denom *= -1;
+    }
 
     const t1y = (this.a2 * Math.sin(t1 + t2)) / denom;
     const t1x = (this.a2 * Math.cos(t1 + t2)) / denom;
@@ -105,30 +122,33 @@ export class AppHome {
     const dt1 = t1y * this.vy + t1x * this.vx;
     const dt2 = t2y * this.vy + t2x * this.vx;
 
-    let divisor = 50;
+    const movement = 0.001;
 
-    // if (Math.abs(toDeg(dt1)) > 1 || Math.abs(toDeg(dt2)) > 1) {
-    //   divisor = Math.max(Math.abs(toDeg(dt1)), Math.abs(toDeg(dt2)));
-    // }
+    let divisor = Math.max(Math.abs(dt1), Math.abs(dt2)) / movement;
 
-    console.log(toDeg(dt1), toDeg(dt2), divisor);
+    this.t1 += dt1 / divisor;
+    this.t2 += dt2 / divisor;
 
-    this.t1 += toDeg(dt1) / divisor;
-    this.t2 += toDeg(dt2) / divisor;
+    this.t2 %= 2 * Math.PI;
+    this.t1 %= 2 * Math.PI;
   }
 
   drawRobot() {
     this.clearCanvas();
 
-    let j1x = this.a1 * Math.cos(toRad(this.t1));
-    let j1y = this.a1 * Math.sin(toRad(this.t1));
+    let j1x = this.a1 * Math.cos(this.t1);
+    let j1y = this.a1 * Math.sin(this.t1);
 
     let j2x =
-      this.a1 * Math.cos(toRad(this.t1)) +
-      this.a2 * Math.cos(toRad(this.t1) + toRad(this.t2));
+      this.a1 * Math.cos(this.t1) + this.a2 * Math.cos(this.t1 + this.t2);
     let j2y =
-      this.a1 * Math.sin(toRad(this.t1)) +
-      this.a2 * Math.sin(toRad(this.t1) + toRad(this.t2));
+      this.a1 * Math.sin(this.t1) + this.a2 * Math.sin(this.t1 + this.t2);
+
+    this.x1 = j1x;
+    this.y1 = j1y;
+
+    this.x2 = j2x;
+    this.y2 = j2y;
 
     j1x += (1 / 2) * this.canvasSize;
     j2x += (1 / 2) * this.canvasSize;
@@ -146,12 +166,13 @@ export class AppHome {
     ctx.arc(j1x, j1y, 10, 0, 2 * Math.PI);
     ctx.fillStyle = "red";
     ctx.fill();
+    ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(j2x, j2y, 10, 0, 2 * Math.PI);
     ctx.fillStyle = "black";
     ctx.fill();
-
+    ctx.stroke();
     ctx.beginPath();
     ctx.arc(
       (1 / 2) * this.canvasSize,
@@ -162,13 +183,14 @@ export class AppHome {
     );
     ctx.fillStyle = "red";
     ctx.fill();
+    ctx.stroke();
   }
 
   componentDidLoad() {
-    this.a1 = 150;
-    this.a2 = 150;
-    this.t1 = 45;
-    this.t2 = 45;
+    this.a1 = 100;
+    this.a2 = 100;
+    this.t1 = toRad(50);
+    this.t2 = toRad(0);
 
     this.drawRobot();
   }
@@ -177,19 +199,38 @@ export class AppHome {
     return (
       <div class="app-home">
         <h1>The Engraving Robot Simulator</h1>
-        <div class="inputs">
-          <input ref={ref => (this.xInput = ref)} placeholder="x" />
-          <input ref={ref => (this.yInput = ref)} placeholder="y" />
-          <button onClick={() => this.onSetPosition()}>Set</button>
+        <div class="button-box">
+          <div class="inputs">
+            <input ref={ref => (this.xInput = ref)} placeholder="x" />
+            <input ref={ref => (this.yInput = ref)} placeholder="y" />
+            <button onClick={() => this.onSetPosition()}>Set</button>
+          </div>
+          <div class="inputs">
+            <input ref={ref => (this.vxInput = ref)} placeholder="vx" />
+            <input ref={ref => (this.vyInput = ref)} placeholder="vy" />
+            <button onClick={() => this.onToggleStart()}>
+              {this.interval ? "Stop" : "Start"}
+            </button>
+          </div>
         </div>
-        <div class="inputs">
-          <input ref={ref => (this.vxInput = ref)} placeholder="vx" />
-          <input ref={ref => (this.vyInput = ref)} placeholder="vy" />
-          <button onClick={() => this.onToggleStart()}>
-            {this.interval ? "Stop" : "Start"}
-          </button>
+        <div />
+        <div class="button-box">
+          <div class="labels">
+            <p>
+              x: {this.x2 ? this.x2.toFixed(2) : "unset"} y:{" "}
+              {this.y2 ? this.y2.toFixed(2) : "unset"}
+            </p>
+          </div>
+          <div class="labels">
+            <p>
+              theta1: {this.t1 ? this.t1.toFixed(2) : "unset"} theta2:{" "}
+              {this.t2 ? this.t2.toFixed(2) : "unset"}
+            </p>
+          </div>
         </div>
+
         <canvas
+          class="canvas"
           ref={ref => (this.canvas = ref)}
           width={this.canvasSize}
           height={this.canvasSize}
