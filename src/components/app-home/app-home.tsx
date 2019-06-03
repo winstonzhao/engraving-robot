@@ -2,7 +2,7 @@ import { Component, State } from "@stencil/core";
 
 // const toDeg = (rad: number) => (rad * 180) / Math.PI;
 
-const toRad = (deg: number) => (deg * Math.PI) / 180;
+// const toRad = (deg: number) => (deg * Math.PI) / 180;
 
 @Component({
   tag: "app-home",
@@ -79,14 +79,11 @@ export class AppHome {
   }
 
   setAnglesFor(x: number, y: number) {
-    let t2 =
-      2 *
-      Math.acos(
-        (x < 0 ? -1 : 1) *
-          Math.sqrt((Math.pow(x, 2), Math.pow(y, 2)) / Math.pow(this.a1, 2))
-      );
+    let b = (x < 0 ? -1 : 1) * Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 
-    let t1 = (Math.atan((2 * y) / x) - t2) / 2;
+    let t2 = Math.PI - 2 * Math.asin(b / (2 * this.a1));
+
+    let t1 = -Math.acos(b / (2 * this.a1)) + Math.atan(y / x);
 
     this.t1 = t1;
     this.t2 = t2;
@@ -104,15 +101,16 @@ export class AppHome {
   updateAngles() {
     const t1 = this.t1;
     const t2 = this.t2;
-    let denom =
-      -this.a1 *
-        this.a2 *
-        (Math.sin(t1) * Math.cos(t1 + t2) + Math.cos(t1) * Math.sin(t1 + t2)) -
-      2 * Math.pow(this.a2, 2) * Math.sin(t1 + t2) * Math.cos(t1 + t2);
+    // let denom =
+    //   -this.a1 *
+    //     this.a2 *
+    //     (Math.sin(t1) * Math.cos(t1 + t2) + Math.cos(t1) * Math.sin(t1 + t2)) -
+    //   2 * Math.pow(this.a2, 2) * Math.sin(t1 + t2) * Math.cos(t1 + t2);
 
-    if (denom < 0) {
-      denom *= -1;
-    }
+    let denom =
+      this.a1 *
+      this.a2 *
+      (-Math.sin(t1) * Math.cos(t1 + t2) + Math.sin(t1 + t2) * Math.cos(t1));
 
     const t1y = (this.a2 * Math.sin(t1 + t2)) / denom;
     const t1x = (this.a2 * Math.cos(t1 + t2)) / denom;
@@ -122,7 +120,7 @@ export class AppHome {
     const dt1 = t1y * this.vy + t1x * this.vx;
     const dt2 = t2y * this.vy + t2x * this.vx;
 
-    const movement = 0.001;
+    const movement = 0.01;
 
     let divisor = Math.max(Math.abs(dt1), Math.abs(dt2)) / movement;
 
@@ -273,8 +271,11 @@ export class AppHome {
   componentDidLoad() {
     this.a1 = 100;
     this.a2 = 100;
-    this.t1 = toRad(20);
-    this.t2 = toRad(20);
+    this.t1 = 1;
+    this.t2 = 2;
+    this.vx = 0;
+    this.vy = 1;
+    this.updateAngles();
 
     this.drawRobot();
   }
